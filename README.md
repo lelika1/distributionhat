@@ -9,7 +9,7 @@ DistributionHat - система приема документов при пос
 * **REQUEST**
     * **URL:** `/faculties`
     * **Method:** `GET`
-    * **Parameters:** `mark`
+    * **Parameters:** `mark=315`
 * **RESPONSE**
     * **Content-Type:** `application/json`
     * **Code:** `200 HTTP_OK`
