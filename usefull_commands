@@ -1,0 +1,3 @@
+http POST http://localhost/test <<< "Hello im from body"
+
+sudo fastcgi-daemon2 --config=fastcgi.conf
