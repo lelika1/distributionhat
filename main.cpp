@@ -6,40 +6,45 @@
 #include <iostream>
 #include <sstream>
 
-class HelloFastCGI : virtual public fastcgi::Component, virtual public fastcgi::Handler
+#include "faculties.h"
+
+class DHatFastCGI : virtual public fastcgi::Component, virtual public fastcgi::Handler
 {
-    public:
-        HelloFastCGI(fastcgi::ComponentContext *context) :
-                fastcgi::Component(context)
-        {
+public:
+    DHatFastCGI(fastcgi::ComponentContext *context) :
+            fastcgi::Component(context)
+    {
 
-        }
+    }
 
-        virtual void onLoad()
-        {
+    virtual void onLoad()
+    {
 
-        }
+    }
 
-        virtual void onUnload()
-        {
+    virtual void onUnload()
+    {
 
-        }
+    }
 
-        virtual void handleRequest(fastcgi::Request *request, fastcgi::HandlerContext *context)
-        {
-                request->setContentType("text/plain");
-                auto method = request->getRequestMethod();
-                request->write(method.c_str(), method.length());
-                std::string body;
-                request->requestBody().toString(body);
-                request->write("\n\n", 2);
-                request->write(body.c_str(), body.length());
-                request->write("\n\n", 2);
-                std::stringbuf buffer("Hello " + (request->hasArg("name") ? request->getArg("name") : "Lelika"));
-                request->write(&buffer);
-        }
+    virtual void handleRequest(fastcgi::Request *request, fastcgi::HandlerContext *context)
+    {
+        faculties.ScheduleRequest(request, context);
+        // request->setContentType("text/plain");
+        // auto method = request->getRequestMethod();
+        // request->write(method.c_str(), method.length());
+        // std::string body;
+        // request->requestBody().toString(body);
+        // request->write("\n\n", 2);
+        // request->write(body.c_str(), body.length());
+        // request->write("\n\n", 2);
+        // std::stringbuf buffer("Hello " + (request->hasArg("name") ? request->getArg("name") : "Lelika"));
+        // request->write(&buffer);
+    }
+private:
+    NFaculties::TFaculties faculties;
 };
 
 FCGIDAEMON_REGISTER_FACTORIES_BEGIN()
-FCGIDAEMON_ADD_DEFAULT_FACTORY("HelloFastCGIFactory", HelloFastCGI)
+FCGIDAEMON_ADD_DEFAULT_FACTORY("DHatFastCGIFactory", DHatFastCGI)
 FCGIDAEMON_REGISTER_FACTORIES_END()
