@@ -2,37 +2,31 @@
 #include <iostream>
 
 TStorage::TStorage() {
-    faculties["famcs"] = TFacultyInfo("FAMCS", "famcs",
-                                      "Faculty of applied mathematics and computer science", 4);
-    faculties["mmf"] = TFacultyInfo("MMF", "mmf",
-                                    "Faculty of Mathematics and Mechanics", 5);
-    faculties["physfak"] = TFacultyInfo("Physics", "physfak",
-                                    "Faculty of physics", 3);
-       
+    faculties["famcs"] = TFacultyInfo("FAMCS", "famcs", 4, 0,
+                                      "Faculty of applied mathematics and computer science");
+    faculties["mmf"] = TFacultyInfo("MMF", "mmf", 5, 0,
+                                    "Faculty of Mathematics and Mechanics");
+    faculties["physfak"] = TFacultyInfo("Physics", "physfak", 3, 0,
+                                        "Faculty of physics");      
 }
 
 TStorage::~TStorage() {}
 
-std::vector<TReducedFacultyInfo> TStorage::GetFaculties(uint32_t mark) {
-    std::vector<TReducedFacultyInfo> fs;
-    std::cout << "mark = " << mark << "\n";
+std::vector<TFacultyInfo> TStorage::GetFaculties(uint32_t mark) {
+    std::vector<TFacultyInfo> fs;
     for (const auto& faculty : faculties) {
         if (mark > MAX_MARK) {
-            fs.push_back(TReducedFacultyInfo(faculty.second.name, faculty.second.facultyId,
-                                             faculty.second.slotsCount, faculty.second.applicationsCount));
+            fs.push_back(faculty.second);
             continue;
         }
         uint32_t count_prior_slots = 0;
-        for (const auto& item : faculty.second.distributionHist) {
-            if (mark <= item.markMax) {
-                count_prior_slots += item.applications;
-            }
+        uint32_t index = (mark - MIN_MARK) / DISTRIBUTION_STEP;
+        for (size_t i = index; i < faculty.second.distributionHist.size(); ++i) {
+            count_prior_slots += faculty.second.distributionHist[i];
         }
-        std::cout << count_prior_slots << "\n";
+
         if (count_prior_slots < faculty.second.slotsCount) {
-            fs.push_back(TReducedFacultyInfo(faculty.second.name, faculty.second.facultyId,
-                                             faculty.second.slotsCount,
-                                             faculty.second.applicationsCount));   
+            fs.push_back(faculty.second);   
         }
     }
     return fs;
@@ -75,14 +69,11 @@ bool TStorage::DeleteAppliation(const std::string& facultyId,
         return false;
     facultyIt->second.applicationsCount -= 1;
     uint32_t mark = appIt->second.mark;
-    for (auto& bin : facultyIt->second.distributionHist) {
-        if ((mark >= bin.markMin) && (mark <= bin.markMax)) {
-            bin.applications -= 1;
-            break;
-        }
-    }
+    uint32_t index = (mark - MIN_MARK) / DISTRIBUTION_STEP;
+    facultyIt->second.distributionHist[index] -= 1;
     applications.erase(appIt);
     return true;
+    return  false;
 }
 
 bool TStorage::AddApplicationToFaculty(std::string facultyId, uint32_t mark) {
@@ -90,11 +81,7 @@ bool TStorage::AddApplicationToFaculty(std::string facultyId, uint32_t mark) {
     if (facultyIt == faculties.end())
         return false;
     facultyIt->second.applicationsCount += 1;
-    for (auto& bin : facultyIt->second.distributionHist) {
-        if ((mark >= bin.markMin) && (mark <= bin.markMax)) {
-            bin.applications += 1;
-            break;
-        }
-    }
+    uint32_t index = (mark - MIN_MARK) / DISTRIBUTION_STEP;
+    facultyIt->second.distributionHist[index] += 1;
     return true;
 }

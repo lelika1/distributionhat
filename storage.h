@@ -5,7 +5,7 @@ class TStorage {
 public:
     TStorage();
     ~TStorage();
-    std::vector<TReducedFacultyInfo> GetFaculties(uint32_t mark);
+    std::vector<TFacultyInfo> GetFaculties(uint32_t mark);
     bool GetFaculty(const std::string& facultyId, TFacultyInfo& info);
     bool AddApplication(const std::string& facultyId,
                         const std::string& applicationId,

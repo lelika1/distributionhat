@@ -44,48 +44,35 @@ bool IsDeleteApplication(const std::string& path, const std::string& method,
     return false;
 }
 
-void PrintReducedFacultyInfo(rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer,
-                             const TReducedFacultyInfo& facultyInfo)
-{
-    writer.StartObject();
-    writer.String("id");
-    writer.String(facultyInfo.facultyId.c_str());
-    writer.String("name");
-    writer.String(facultyInfo.name.c_str());
-    writer.String("slotsCount");
-    writer.Int(facultyInfo.slotsCount);
-    writer.String("applicationsCount");
-    writer.Int(facultyInfo.applicationsCount);
-    writer.EndObject();
-}
-
 void PrintFacultyInfo(rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer,
-                      const TFacultyInfo& facultyInfo)
+                      const TFacultyInfo& facultyInfo, bool reduced = 0)
 {
     writer.StartObject();
     writer.String("id");
     writer.String(facultyInfo.facultyId.c_str());
     writer.String("name");
     writer.String(facultyInfo.name.c_str());
-    writer.String("description");
-    writer.String(facultyInfo.facultyDescription.c_str());
     writer.String("slotsCount");
     writer.Int(facultyInfo.slotsCount);
     writer.String("applicationsCount");
     writer.Int(facultyInfo.applicationsCount);
-    writer.String("distributionHist");
-    writer.StartArray();
-    for (const auto& bin : facultyInfo.distributionHist) {
-        writer.StartObject();
-        writer.String("markmin");
-        writer.Int(bin.markMin);
-        writer.String("markMax");
-        writer.Int(bin.markMax);
-        writer.String("applications");
-        writer.Int(bin.applications);
-        writer.EndObject();
+    if (!reduced) {
+        writer.String("description");
+        writer.String(facultyInfo.facultyDescription.c_str());
+        writer.String("distributionHist");
+        writer.StartArray();
+        for (size_t i = 0; i < facultyInfo.distributionHist.size(); ++i) {
+            writer.StartObject();
+            writer.String("markmin");
+            writer.Int(MIN_MARK + i * DISTRIBUTION_STEP);
+            writer.String("markMax");
+            writer.Int(MIN_MARK + (i + 1) * DISTRIBUTION_STEP);
+            writer.String("applications");
+            writer.Int(facultyInfo.distributionHist[i]);
+            writer.EndObject();
+        }
+        writer.EndArray();
     }
-    writer.EndArray();
     writer.EndObject();
 }
 
@@ -103,7 +90,6 @@ void TFaculties::ScheduleRequest(fastcgi::Request *request, fastcgi::HandlerCont
     request->setContentType("application/json");
     std::string facultyId;
     std::string applicationId;
-    // std::cout << path << std::endl;
     if (IsFacultiesList(path, method)) {
         FacultiesList(request, context);
     } else if (IsFacultyInfo(path, method, &facultyId)) {
@@ -127,7 +113,7 @@ void TFaculties::FacultiesList(fastcgi::Request *request,
     writer.String("faculties");
     writer.StartArray();
     for (const auto& facultyInfo : storage.GetFaculties(mark)) {
-        PrintReducedFacultyInfo(writer, facultyInfo);
+        PrintFacultyInfo(writer, facultyInfo, 1);
     }
     writer.EndArray();
     writer.EndObject();
@@ -146,7 +132,7 @@ void TFaculties::FacultyInfo(fastcgi::Request *request, fastcgi::HandlerContext 
     }
     rapidjson::StringBuffer sb;
     rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(sb);
-    PrintFacultyInfo(writer, info);
+    PrintFacultyInfo(writer, info, 0);
     request->write(sb.GetString(), sb.GetSize());
     request->setStatus(200);
 }
